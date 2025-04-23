@@ -72,22 +72,33 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 int yylex();
 void yyerror(const char *s);
 
+/* Symbol table structure */
+typedef struct Symbol {
+    char *name;
+    int value;
+    int is_temp;
+    int is_constant;
+    struct Symbol *next;
+} Symbol;
+
+Symbol *symbol_table = NULL;
 int temp_counter = 0;
 
-char* new_temp() {
-    char* temp = (char*)malloc(10 * sizeof(char));
-    sprintf(temp, "t%d", temp_counter++);
-    return temp;
-}
+/* Function prototypes */
+char* new_temp();
+Symbol* find_symbol(char *name);
+void add_symbol(char *name, int is_temp, int is_constant, int value);
+void print_symbol_table();
 
 
 /* Line 189 of yacc.c  */
-#line 91 "parser.tab.c"
+#line 102 "parser.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -133,7 +144,7 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 18 "parser.y"
+#line 29 "parser.y"
 
     int num;
     char* str;
@@ -141,7 +152,7 @@ typedef union YYSTYPE
 
 
 /* Line 214 of yacc.c  */
-#line 145 "parser.tab.c"
+#line 156 "parser.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -153,7 +164,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 157 "parser.tab.c"
+#line 168 "parser.tab.c"
 
 #ifdef short
 # undef short
@@ -440,8 +451,8 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    36,    36,    38,    42,    43,    47,    48,    49,    50,
-      51,    52,    53,    54
+       0,    47,    47,    49,    53,    62,    72,    77,    84,    91,
+      98,   105,   112,   119
 };
 #endif
 
@@ -1353,77 +1364,131 @@ yyreduce:
         case 4:
 
 /* Line 1455 of yacc.c  */
-#line 42 "parser.y"
-    { printf("%s\n", (yyvsp[(1) - (2)].str)); free((yyvsp[(1) - (2)].str)); ;}
+#line 53 "parser.y"
+    { 
+        printf("Three-address code:\n%s\n", (yyvsp[(1) - (2)].str)); 
+        printf("\nSymbol Table:\n");
+        print_symbol_table();
+        free((yyvsp[(1) - (2)].str)); 
+        /* Reset for next input */
+        symbol_table = NULL;
+        temp_counter = 0;
+    ;}
     break;
 
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 43 "parser.y"
-    { printf("%s\n", (yyvsp[(1) - (1)].str)); free((yyvsp[(1) - (1)].str)); YYACCEPT; ;}
+#line 62 "parser.y"
+    { 
+        printf("Three-address code:\n%s\n", (yyvsp[(1) - (1)].str)); 
+        printf("\nSymbol Table:\n");
+        print_symbol_table();
+        free((yyvsp[(1) - (1)].str)); 
+        YYACCEPT; 
+    ;}
     break;
 
   case 6:
 
 /* Line 1455 of yacc.c  */
-#line 47 "parser.y"
-    { (yyval.str) = new_temp(); printf("%s = %d\n", (yyval.str), (yyvsp[(1) - (1)].num)); ;}
+#line 72 "parser.y"
+    { 
+        (yyval.str) = new_temp(); 
+        printf("%s = %d\n", (yyval.str), (yyvsp[(1) - (1)].num)); 
+        add_symbol((yyval.str), 1, 1, (yyvsp[(1) - (1)].num));
+    ;}
     break;
 
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 48 "parser.y"
-    { (yyval.str) = new_temp(); printf("%s = %s + %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); free((yyvsp[(1) - (3)].str)); free((yyvsp[(3) - (3)].str)); ;}
+#line 77 "parser.y"
+    { 
+        (yyval.str) = new_temp(); 
+        printf("%s = %s + %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
+        add_symbol((yyval.str), 1, 0, 0); /* Temp var, not constant */
+        free((yyvsp[(1) - (3)].str)); 
+        free((yyvsp[(3) - (3)].str)); 
+    ;}
     break;
 
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 49 "parser.y"
-    { (yyval.str) = new_temp(); printf("%s = %s - %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); free((yyvsp[(1) - (3)].str)); free((yyvsp[(3) - (3)].str)); ;}
+#line 84 "parser.y"
+    { 
+        (yyval.str) = new_temp(); 
+        printf("%s = %s - %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
+        add_symbol((yyval.str), 1, 0, 0);
+        free((yyvsp[(1) - (3)].str)); 
+        free((yyvsp[(3) - (3)].str)); 
+    ;}
     break;
 
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 50 "parser.y"
-    { (yyval.str) = new_temp(); printf("%s = %s * %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); free((yyvsp[(1) - (3)].str)); free((yyvsp[(3) - (3)].str)); ;}
+#line 91 "parser.y"
+    { 
+        (yyval.str) = new_temp(); 
+        printf("%s = %s * %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
+        add_symbol((yyval.str), 1, 0, 0);
+        free((yyvsp[(1) - (3)].str)); 
+        free((yyvsp[(3) - (3)].str)); 
+    ;}
     break;
 
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 51 "parser.y"
-    { (yyval.str) = new_temp(); printf("%s = %s / %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); free((yyvsp[(1) - (3)].str)); free((yyvsp[(3) - (3)].str)); ;}
+#line 98 "parser.y"
+    { 
+        (yyval.str) = new_temp(); 
+        printf("%s = %s / %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
+        add_symbol((yyval.str), 1, 0, 0);
+        free((yyvsp[(1) - (3)].str)); 
+        free((yyvsp[(3) - (3)].str)); 
+    ;}
     break;
 
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 52 "parser.y"
-    { (yyval.str) = new_temp(); printf("%s = %s %% %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); free((yyvsp[(1) - (3)].str)); free((yyvsp[(3) - (3)].str)); ;}
+#line 105 "parser.y"
+    { 
+        (yyval.str) = new_temp(); 
+        printf("%s = %s %% %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
+        add_symbol((yyval.str), 1, 0, 0);
+        free((yyvsp[(1) - (3)].str)); 
+        free((yyvsp[(3) - (3)].str)); 
+    ;}
     break;
 
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 53 "parser.y"
-    { (yyval.str) = new_temp(); printf("%s = %s ^ %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); free((yyvsp[(1) - (3)].str)); free((yyvsp[(3) - (3)].str)); ;}
+#line 112 "parser.y"
+    { 
+        (yyval.str) = new_temp(); 
+        printf("%s = %s ^ %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
+        add_symbol((yyval.str), 1, 0, 0);
+        free((yyvsp[(1) - (3)].str)); 
+        free((yyvsp[(3) - (3)].str)); 
+    ;}
     break;
 
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 54 "parser.y"
+#line 119 "parser.y"
     { (yyval.str) = (yyvsp[(2) - (3)].str); ;}
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 1427 "parser.tab.c"
+#line 1492 "parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1635,14 +1700,85 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 57 "parser.y"
+#line 122 "parser.y"
 
+
+char* new_temp() {
+    char* temp = (char*)malloc(10 * sizeof(char));
+    sprintf(temp, "t%d", temp_counter++);
+    return temp;
+}
+
+Symbol* find_symbol(char *name) {
+    Symbol *current = symbol_table;
+    while (current != NULL) {
+        if (strcmp(current->name, name) == 0) {
+            return current;
+        }
+        current = current->next;
+    }
+    return NULL;
+}
+
+void add_symbol(char *name, int is_temp, int is_constant, int value) {
+    Symbol *existing = find_symbol(name);
+    if (existing != NULL) {
+        /* Update existing symbol */
+        existing->is_constant = is_constant;
+        if (is_constant) {
+            existing->value = value;
+        }
+        return;
+    }
+    
+    /* Create new symbol */
+    Symbol *new_symbol = (Symbol*)malloc(sizeof(Symbol));
+    new_symbol->name = strdup(name);
+    new_symbol->is_temp = is_temp;
+    new_symbol->is_constant = is_constant;
+    new_symbol->value = value;
+    new_symbol->next = symbol_table;
+    symbol_table = new_symbol;
+}
+
+void print_symbol_table() {
+    Symbol *current = symbol_table;
+    printf("%-10s %-10s %-10s %-10s\n", "Name", "Type", "Constant", "Value");
+    printf("------------------------------------\n");
+    while (current != NULL) {
+        printf("%-10s %-10s %-10s ", 
+            current->name, 
+            current->is_temp ? "temp" : "user",
+            current->is_constant ? "yes" : "no");
+        
+        if (current->is_constant) {
+            printf("%-10d\n", current->value);
+        } else {
+            printf("%-10s\n", "unknown");
+        }
+        
+        current = current->next;
+    }
+}
+
+void free_symbol_table() {
+    Symbol *current = symbol_table;
+    while (current != NULL) {
+        Symbol *next = current->next;
+        free(current->name);
+        free(current);
+        current = next;
+    }
+    symbol_table = NULL;
+}
 
 void yyerror(const char *s) {
     fprintf(stderr, "Error: %s\n", s);
+    free_symbol_table();
 }
 
 int main(int argc, char **argv) {
     yyparse();
+    free_symbol_table();
     return 0;
 }
