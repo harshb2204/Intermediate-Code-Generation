@@ -42,10 +42,7 @@ flex lexer.l
 gcc -o math_parser parser.tab.c lex.yy.c -lm
 ```
 
-Or use the provided Makefile:
-```bash
-make
-```
+
 
 ## Usage
 
