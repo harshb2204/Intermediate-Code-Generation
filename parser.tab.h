@@ -40,14 +40,23 @@
       know about them.  */
    enum yytokentype {
      NUMBER = 258,
-     PLUS = 259,
-     MINUS = 260,
-     MULTIPLY = 261,
-     DIVIDE = 262,
-     MODULO = 263,
-     POWER = 264,
-     LPAREN = 265,
-     RPAREN = 266
+     IDENTIFIER = 259,
+     PLUS = 260,
+     MINUS = 261,
+     MULTIPLY = 262,
+     DIVIDE = 263,
+     MODULO = 264,
+     POWER = 265,
+     ASSIGN = 266,
+     LPAREN = 267,
+     RPAREN = 268,
+     SIN = 269,
+     COS = 270,
+     TAN = 271,
+     SQRT = 272,
+     LOG = 273,
+     EXP = 274,
+     ABS = 275
    };
 #endif
 
@@ -58,15 +67,15 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 29 "parser.y"
+#line 44 "parser.y"
 
-    int num;
+    double num;
     char* str;
 
 
 
 /* Line 1676 of yacc.c  */
-#line 70 "parser.tab.h"
+#line 79 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

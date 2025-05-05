@@ -81,7 +81,7 @@ void yyerror(const char *s);
 /* Symbol table structure */
 typedef struct Symbol {
     char *name;
-    int value;
+    double value;
     int is_temp;
     int is_constant;
     struct Symbol *next;
@@ -93,12 +93,27 @@ int temp_counter = 0;
 /* Function prototypes */
 char* new_temp();
 Symbol* find_symbol(char *name);
-void add_symbol(char *name, int is_temp, int is_constant, int value);
+void add_symbol(char *name, int is_temp, int is_constant, double value);
 void print_symbol_table();
+void free_symbol_table();
+
+// ANSI color codes for terminal output
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+#define ANSI_BOLD         "\x1b[1m"
+
+// Constants
+#define PI 3.141592653589793
+#define E 2.718281828459045
 
 
 /* Line 189 of yacc.c  */
-#line 102 "parser.tab.c"
+#line 117 "parser.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -126,14 +141,23 @@ void print_symbol_table();
       know about them.  */
    enum yytokentype {
      NUMBER = 258,
-     PLUS = 259,
-     MINUS = 260,
-     MULTIPLY = 261,
-     DIVIDE = 262,
-     MODULO = 263,
-     POWER = 264,
-     LPAREN = 265,
-     RPAREN = 266
+     IDENTIFIER = 259,
+     PLUS = 260,
+     MINUS = 261,
+     MULTIPLY = 262,
+     DIVIDE = 263,
+     MODULO = 264,
+     POWER = 265,
+     ASSIGN = 266,
+     LPAREN = 267,
+     RPAREN = 268,
+     SIN = 269,
+     COS = 270,
+     TAN = 271,
+     SQRT = 272,
+     LOG = 273,
+     EXP = 274,
+     ABS = 275
    };
 #endif
 
@@ -144,15 +168,15 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 29 "parser.y"
+#line 44 "parser.y"
 
-    int num;
+    double num;
     char* str;
 
 
 
 /* Line 214 of yacc.c  */
-#line 156 "parser.tab.c"
+#line 180 "parser.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -164,7 +188,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 168 "parser.tab.c"
+#line 192 "parser.tab.c"
 
 #ifdef short
 # undef short
@@ -379,20 +403,20 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  2
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   37
+#define YYLAST   137
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  13
+#define YYNTOKENS  22
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  4
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  13
+#define YYNRULES  22
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  22
+#define YYNSTATES  55
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   266
+#define YYMAXUTOK   275
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -401,7 +425,7 @@ union yyalloc
 static const yytype_uint8 yytranslate[] =
 {
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      12,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+      21,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -426,7 +450,8 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6,     7,     8,     9,    10,    11
+       5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
+      15,    16,    17,    18,    19,    20
 };
 
 #if YYDEBUG
@@ -434,25 +459,31 @@ static const yytype_uint8 yytranslate[] =
    YYRHS.  */
 static const yytype_uint8 yyprhs[] =
 {
-       0,     0,     3,     4,     7,    10,    12,    14,    18,    22,
-      26,    30,    34,    38
+       0,     0,     3,     4,     7,    10,    15,    17,    19,    21,
+      25,    29,    33,    37,    41,    45,    50,    55,    60,    65,
+      70,    75,    80
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-      14,     0,    -1,    -1,    14,    15,    -1,    16,    12,    -1,
-      16,    -1,     3,    -1,    16,     4,    16,    -1,    16,     5,
-      16,    -1,    16,     6,    16,    -1,    16,     7,    16,    -1,
-      16,     8,    16,    -1,    16,     9,    16,    -1,    10,    16,
-      11,    -1
+      23,     0,    -1,    -1,    23,    24,    -1,    25,    21,    -1,
+       4,    11,    25,    21,    -1,    25,    -1,     3,    -1,     4,
+      -1,    25,     5,    25,    -1,    25,     6,    25,    -1,    25,
+       7,    25,    -1,    25,     8,    25,    -1,    25,     9,    25,
+      -1,    25,    10,    25,    -1,    14,    12,    25,    13,    -1,
+      15,    12,    25,    13,    -1,    16,    12,    25,    13,    -1,
+      17,    12,    25,    13,    -1,    18,    12,    25,    13,    -1,
+      19,    12,    25,    13,    -1,    20,    12,    25,    13,    -1,
+      12,    25,    13,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    47,    47,    49,    53,    62,    72,    77,    84,    91,
-      98,   105,   112,   119
+       0,    65,    65,    67,    71,    80,    91,   104,   109,   123,
+     130,   137,   144,   163,   170,   177,   183,   189,   195,   201,
+     207,   213,   219
 };
 #endif
 
@@ -461,8 +492,9 @@ static const yytype_uint8 yyrline[] =
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "NUMBER", "PLUS", "MINUS", "MULTIPLY",
-  "DIVIDE", "MODULO", "POWER", "LPAREN", "RPAREN", "'\\n'", "$accept",
+  "$end", "error", "$undefined", "NUMBER", "IDENTIFIER", "PLUS", "MINUS",
+  "MULTIPLY", "DIVIDE", "MODULO", "POWER", "ASSIGN", "LPAREN", "RPAREN",
+  "SIN", "COS", "TAN", "SQRT", "LOG", "EXP", "ABS", "'\\n'", "$accept",
   "input", "line", "expr", 0
 };
 #endif
@@ -473,22 +505,25 @@ static const char *const yytname[] =
 static const yytype_uint16 yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
-     265,   266,    10
+     265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
+     275,    10
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    13,    14,    14,    15,    15,    16,    16,    16,    16,
-      16,    16,    16,    16
+       0,    22,    23,    23,    24,    24,    24,    25,    25,    25,
+      25,    25,    25,    25,    25,    25,    25,    25,    25,    25,
+      25,    25,    25
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     0,     2,     2,     1,     1,     3,     3,     3,
-       3,     3,     3,     3
+       0,     2,     0,     2,     2,     4,     1,     1,     1,     3,
+       3,     3,     3,     3,     3,     4,     4,     4,     4,     4,
+       4,     4,     3
 };
 
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
@@ -496,31 +531,37 @@ static const yytype_uint8 yyr2[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       2,     0,     1,     6,     0,     3,     5,     0,     0,     0,
-       0,     0,     0,     0,     4,    13,     7,     8,     9,    10,
-      11,    12
+       2,     0,     1,     7,     8,     0,     0,     0,     0,     0,
+       0,     0,     0,     3,     6,     0,     8,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     4,     0,    22,     0,     0,     0,     0,     0,     0,
+       0,     9,    10,    11,    12,    13,    14,     5,    15,    16,
+      17,    18,    19,    20,    21
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     1,     5,     6
+      -1,     1,    13,    14
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -8
+#define YYPACT_NINF -6
 static const yytype_int8 yypact[] =
 {
-      -8,     0,    -8,    -8,    -2,    -8,    13,    22,    -2,    -2,
-      -2,    -2,    -2,    -2,    -8,    -8,    28,    28,    -7,    -7,
-      -7,    -7
+      -6,    26,    -6,    -6,    -3,    44,    -1,     0,    15,    16,
+      23,    25,    27,    -6,    45,    44,    -6,    -4,    44,    44,
+      44,    44,    44,    44,    44,    44,    44,    44,    44,    44,
+      44,    -6,    62,    -6,    68,    79,    88,    97,   106,   115,
+     124,    24,    24,    39,    39,    39,    39,    -6,    -6,    -6,
+      -6,    -6,    -6,    -6,    -6
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -8,    -8,    -8,     3
+      -6,    -6,    -6,    -5
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -530,27 +571,50 @@ static const yytype_int8 yypgoto[] =
 #define YYTABLE_NINF -1
 static const yytype_uint8 yytable[] =
 {
-       2,     3,    13,     3,     0,     0,     0,     7,     4,     0,
-       4,    16,    17,    18,    19,    20,    21,     8,     9,    10,
-      11,    12,    13,     0,     0,    14,     8,     9,    10,    11,
-      12,    13,     0,    15,    10,    11,    12,    13
+      17,    25,    26,    27,    28,    29,    30,     0,    15,    33,
+      32,    18,    19,    34,    35,    36,    37,    38,    39,    40,
+      41,    42,    43,    44,    45,    46,     2,    20,    21,     3,
+       4,    27,    28,    29,    30,    22,     0,    23,     5,    24,
+       6,     7,     8,     9,    10,    11,    12,     3,    16,    30,
+      25,    26,    27,    28,    29,    30,     5,     0,     6,     7,
+       8,     9,    10,    11,    12,     0,    31,    25,    26,    27,
+      28,    29,    30,    25,    26,    27,    28,    29,    30,     0,
+       0,    48,     0,    47,    25,    26,    27,    28,    29,    30,
+       0,     0,    49,    25,    26,    27,    28,    29,    30,     0,
+       0,    50,    25,    26,    27,    28,    29,    30,     0,     0,
+      51,    25,    26,    27,    28,    29,    30,     0,     0,    52,
+      25,    26,    27,    28,    29,    30,     0,     0,    53,    25,
+      26,    27,    28,    29,    30,     0,     0,    54
 };
 
 static const yytype_int8 yycheck[] =
 {
-       0,     3,     9,     3,    -1,    -1,    -1,     4,    10,    -1,
-      10,     8,     9,    10,    11,    12,    13,     4,     5,     6,
-       7,     8,     9,    -1,    -1,    12,     4,     5,     6,     7,
-       8,     9,    -1,    11,     6,     7,     8,     9
+       5,     5,     6,     7,     8,     9,    10,    -1,    11,    13,
+      15,    12,    12,    18,    19,    20,    21,    22,    23,    24,
+      25,    26,    27,    28,    29,    30,     0,    12,    12,     3,
+       4,     7,     8,     9,    10,    12,    -1,    12,    12,    12,
+      14,    15,    16,    17,    18,    19,    20,     3,     4,    10,
+       5,     6,     7,     8,     9,    10,    12,    -1,    14,    15,
+      16,    17,    18,    19,    20,    -1,    21,     5,     6,     7,
+       8,     9,    10,     5,     6,     7,     8,     9,    10,    -1,
+      -1,    13,    -1,    21,     5,     6,     7,     8,     9,    10,
+      -1,    -1,    13,     5,     6,     7,     8,     9,    10,    -1,
+      -1,    13,     5,     6,     7,     8,     9,    10,    -1,    -1,
+      13,     5,     6,     7,     8,     9,    10,    -1,    -1,    13,
+       5,     6,     7,     8,     9,    10,    -1,    -1,    13,     5,
+       6,     7,     8,     9,    10,    -1,    -1,    13
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,    14,     0,     3,    10,    15,    16,    16,     4,     5,
-       6,     7,     8,     9,    12,    11,    16,    16,    16,    16,
-      16,    16
+       0,    23,     0,     3,     4,    12,    14,    15,    16,    17,
+      18,    19,    20,    24,    25,    11,     4,    25,    12,    12,
+      12,    12,    12,    12,    12,     5,     6,     7,     8,     9,
+      10,    21,    25,    13,    25,    25,    25,    25,    25,    25,
+      25,    25,    25,    25,    25,    25,    25,    21,    13,    13,
+      13,    13,    13,    13,    13
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1364,14 +1428,14 @@ yyreduce:
         case 4:
 
 /* Line 1455 of yacc.c  */
-#line 53 "parser.y"
+#line 71 "parser.y"
     { 
-        printf("Three-address code:\n%s\n", (yyvsp[(1) - (2)].str)); 
-        printf("\nSymbol Table:\n");
+        printf("\n%sThree-address code:%s\n", ANSI_BOLD ANSI_COLOR_BLUE, ANSI_COLOR_RESET);
+        printf("%s%s%s\n", ANSI_COLOR_CYAN, (yyvsp[(1) - (2)].str), ANSI_COLOR_RESET); 
+        printf("\n%sSymbol Table:%s\n", ANSI_BOLD ANSI_COLOR_BLUE, ANSI_COLOR_RESET);
         print_symbol_table();
-        free((yyvsp[(1) - (2)].str)); 
-        /* Reset for next input */
-        symbol_table = NULL;
+        free((yyvsp[(1) - (2)].str));
+        free_symbol_table();
         temp_counter = 0;
     ;}
     break;
@@ -1379,60 +1443,74 @@ yyreduce:
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 62 "parser.y"
-    { 
-        printf("Three-address code:\n%s\n", (yyvsp[(1) - (1)].str)); 
-        printf("\nSymbol Table:\n");
+#line 80 "parser.y"
+    {
+        printf("\n%sAssignment:%s\n", ANSI_BOLD ANSI_COLOR_BLUE, ANSI_COLOR_RESET);
+        printf("%s%s%s = %s%s%s\n", ANSI_COLOR_GREEN, (yyvsp[(1) - (4)].str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(3) - (4)].str), ANSI_COLOR_RESET);
+        add_symbol((yyvsp[(1) - (4)].str), 0, 0, 0);
+        printf("\n%sSymbol Table:%s\n", ANSI_BOLD ANSI_COLOR_BLUE, ANSI_COLOR_RESET);
         print_symbol_table();
-        free((yyvsp[(1) - (1)].str)); 
-        YYACCEPT; 
+        free((yyvsp[(1) - (4)].str)); 
+        free((yyvsp[(3) - (4)].str));
+        free_symbol_table();
+        temp_counter = 0;
     ;}
     break;
 
   case 6:
 
 /* Line 1455 of yacc.c  */
-#line 72 "parser.y"
+#line 91 "parser.y"
     { 
-        (yyval.str) = new_temp(); 
-        printf("%s = %d\n", (yyval.str), (yyvsp[(1) - (1)].num)); 
-        add_symbol((yyval.str), 1, 1, (yyvsp[(1) - (1)].num));
+        printf("\n%sThree-address code:%s\n", ANSI_BOLD ANSI_COLOR_BLUE, ANSI_COLOR_RESET);
+        printf("%s%s%s\n", ANSI_COLOR_CYAN, (yyvsp[(1) - (1)].str), ANSI_COLOR_RESET); 
+        printf("\n%sSymbol Table:%s\n", ANSI_BOLD ANSI_COLOR_BLUE, ANSI_COLOR_RESET);
+        print_symbol_table();
+        free((yyvsp[(1) - (1)].str));
+        free_symbol_table();
+        temp_counter = 0;
+        YYACCEPT; 
     ;}
     break;
 
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 77 "parser.y"
+#line 104 "parser.y"
     { 
         (yyval.str) = new_temp(); 
-        printf("%s = %s + %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
-        add_symbol((yyval.str), 1, 0, 0); /* Temp var, not constant */
-        free((yyvsp[(1) - (3)].str)); 
-        free((yyvsp[(3) - (3)].str)); 
+        printf("%s%s%s = %s%g%s\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_GREEN, (yyvsp[(1) - (1)].num), ANSI_COLOR_RESET); 
+        add_symbol((yyval.str), 1, 1, (yyvsp[(1) - (1)].num));
     ;}
     break;
 
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 84 "parser.y"
-    { 
-        (yyval.str) = new_temp(); 
-        printf("%s = %s - %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
-        add_symbol((yyval.str), 1, 0, 0);
-        free((yyvsp[(1) - (3)].str)); 
-        free((yyvsp[(3) - (3)].str)); 
+#line 109 "parser.y"
+    {
+        if (strcmp((yyvsp[(1) - (1)].str), "PI") == 0) {
+            (yyval.str) = new_temp();
+            printf("%s%s%s = %s%g%s\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_GREEN, PI, ANSI_COLOR_RESET);
+            add_symbol((yyval.str), 1, 1, PI);
+        } else if (strcmp((yyvsp[(1) - (1)].str), "E") == 0) {
+            (yyval.str) = new_temp();
+            printf("%s%s%s = %s%g%s\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_GREEN, E, ANSI_COLOR_RESET);
+            add_symbol((yyval.str), 1, 1, E);
+        } else {
+            (yyval.str) = strdup((yyvsp[(1) - (1)].str));
+            add_symbol((yyvsp[(1) - (1)].str), 0, 0, 0);
+        }
     ;}
     break;
 
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 91 "parser.y"
+#line 123 "parser.y"
     { 
         (yyval.str) = new_temp(); 
-        printf("%s = %s * %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
+        printf("%s%s%s = %s%s%s + %s%s%s\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(1) - (3)].str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(3) - (3)].str), ANSI_COLOR_RESET); 
         add_symbol((yyval.str), 1, 0, 0);
         free((yyvsp[(1) - (3)].str)); 
         free((yyvsp[(3) - (3)].str)); 
@@ -1442,10 +1520,10 @@ yyreduce:
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 98 "parser.y"
+#line 130 "parser.y"
     { 
         (yyval.str) = new_temp(); 
-        printf("%s = %s / %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
+        printf("%s%s%s = %s%s%s - %s%s%s\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(1) - (3)].str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(3) - (3)].str), ANSI_COLOR_RESET); 
         add_symbol((yyval.str), 1, 0, 0);
         free((yyvsp[(1) - (3)].str)); 
         free((yyvsp[(3) - (3)].str)); 
@@ -1455,10 +1533,10 @@ yyreduce:
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 105 "parser.y"
+#line 137 "parser.y"
     { 
         (yyval.str) = new_temp(); 
-        printf("%s = %s %% %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
+        printf("%s%s%s = %s%s%s * %s%s%s\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(1) - (3)].str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(3) - (3)].str), ANSI_COLOR_RESET); 
         add_symbol((yyval.str), 1, 0, 0);
         free((yyvsp[(1) - (3)].str)); 
         free((yyvsp[(3) - (3)].str)); 
@@ -1468,11 +1546,23 @@ yyreduce:
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 112 "parser.y"
+#line 144 "parser.y"
     { 
-        (yyval.str) = new_temp(); 
-        printf("%s = %s ^ %s\n", (yyval.str), (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
-        add_symbol((yyval.str), 1, 0, 0);
+        Symbol *right = find_symbol((yyvsp[(3) - (3)].str));
+        if (right && right->is_constant && right->value == 0) {
+            printf("%sError: Division by zero!%s\n", ANSI_COLOR_RED, ANSI_COLOR_RESET);
+            (yyval.str) = new_temp();
+            printf("%s%s%s = %s%s%s / %s%s%s %s(Error: Division by zero)%s\n", 
+                ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, 
+                ANSI_COLOR_CYAN, (yyvsp[(1) - (3)].str), ANSI_COLOR_RESET, 
+                ANSI_COLOR_CYAN, (yyvsp[(3) - (3)].str), ANSI_COLOR_RESET,
+                ANSI_COLOR_RED, ANSI_COLOR_RESET);
+            add_symbol((yyval.str), 1, 0, 0);
+        } else {
+            (yyval.str) = new_temp(); 
+            printf("%s%s%s = %s%s%s / %s%s%s\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(1) - (3)].str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(3) - (3)].str), ANSI_COLOR_RESET); 
+            add_symbol((yyval.str), 1, 0, 0);
+        }
         free((yyvsp[(1) - (3)].str)); 
         free((yyvsp[(3) - (3)].str)); 
     ;}
@@ -1481,14 +1571,124 @@ yyreduce:
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 119 "parser.y"
+#line 163 "parser.y"
+    { 
+        (yyval.str) = new_temp(); 
+        printf("%s%s%s = %s%s%s %% %s%s%s\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(1) - (3)].str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(3) - (3)].str), ANSI_COLOR_RESET); 
+        add_symbol((yyval.str), 1, 0, 0);
+        free((yyvsp[(1) - (3)].str)); 
+        free((yyvsp[(3) - (3)].str)); 
+    ;}
+    break;
+
+  case 14:
+
+/* Line 1455 of yacc.c  */
+#line 170 "parser.y"
+    { 
+        (yyval.str) = new_temp(); 
+        printf("%s%s%s = %s%s%s ^ %s%s%s\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(1) - (3)].str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(3) - (3)].str), ANSI_COLOR_RESET); 
+        add_symbol((yyval.str), 1, 0, 0);
+        free((yyvsp[(1) - (3)].str)); 
+        free((yyvsp[(3) - (3)].str)); 
+    ;}
+    break;
+
+  case 15:
+
+/* Line 1455 of yacc.c  */
+#line 177 "parser.y"
+    {
+        (yyval.str) = new_temp();
+        printf("%s%s%s = sin(%s%s%s)\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(3) - (4)].str), ANSI_COLOR_RESET);
+        add_symbol((yyval.str), 1, 0, 0);
+        free((yyvsp[(3) - (4)].str));
+    ;}
+    break;
+
+  case 16:
+
+/* Line 1455 of yacc.c  */
+#line 183 "parser.y"
+    {
+        (yyval.str) = new_temp();
+        printf("%s%s%s = cos(%s%s%s)\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(3) - (4)].str), ANSI_COLOR_RESET);
+        add_symbol((yyval.str), 1, 0, 0);
+        free((yyvsp[(3) - (4)].str));
+    ;}
+    break;
+
+  case 17:
+
+/* Line 1455 of yacc.c  */
+#line 189 "parser.y"
+    {
+        (yyval.str) = new_temp();
+        printf("%s%s%s = tan(%s%s%s)\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(3) - (4)].str), ANSI_COLOR_RESET);
+        add_symbol((yyval.str), 1, 0, 0);
+        free((yyvsp[(3) - (4)].str));
+    ;}
+    break;
+
+  case 18:
+
+/* Line 1455 of yacc.c  */
+#line 195 "parser.y"
+    {
+        (yyval.str) = new_temp();
+        printf("%s%s%s = sqrt(%s%s%s)\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(3) - (4)].str), ANSI_COLOR_RESET);
+        add_symbol((yyval.str), 1, 0, 0);
+        free((yyvsp[(3) - (4)].str));
+    ;}
+    break;
+
+  case 19:
+
+/* Line 1455 of yacc.c  */
+#line 201 "parser.y"
+    {
+        (yyval.str) = new_temp();
+        printf("%s%s%s = log(%s%s%s)\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(3) - (4)].str), ANSI_COLOR_RESET);
+        add_symbol((yyval.str), 1, 0, 0);
+        free((yyvsp[(3) - (4)].str));
+    ;}
+    break;
+
+  case 20:
+
+/* Line 1455 of yacc.c  */
+#line 207 "parser.y"
+    {
+        (yyval.str) = new_temp();
+        printf("%s%s%s = exp(%s%s%s)\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(3) - (4)].str), ANSI_COLOR_RESET);
+        add_symbol((yyval.str), 1, 0, 0);
+        free((yyvsp[(3) - (4)].str));
+    ;}
+    break;
+
+  case 21:
+
+/* Line 1455 of yacc.c  */
+#line 213 "parser.y"
+    {
+        (yyval.str) = new_temp();
+        printf("%s%s%s = abs(%s%s%s)\n", ANSI_COLOR_YELLOW, (yyval.str), ANSI_COLOR_RESET, ANSI_COLOR_CYAN, (yyvsp[(3) - (4)].str), ANSI_COLOR_RESET);
+        add_symbol((yyval.str), 1, 0, 0);
+        free((yyvsp[(3) - (4)].str));
+    ;}
+    break;
+
+  case 22:
+
+/* Line 1455 of yacc.c  */
+#line 219 "parser.y"
     { (yyval.str) = (yyvsp[(2) - (3)].str); ;}
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 1492 "parser.tab.c"
+#line 1692 "parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1700,8 +1900,10 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 122 "parser.y"
+#line 222 "parser.y"
 
+
+/* Rest of the functions remain exactly the same as in your original code */
 
 char* new_temp() {
     char* temp = (char*)malloc(10 * sizeof(char));
@@ -1720,7 +1922,7 @@ Symbol* find_symbol(char *name) {
     return NULL;
 }
 
-void add_symbol(char *name, int is_temp, int is_constant, int value) {
+void add_symbol(char *name, int is_temp, int is_constant, double value) {
     Symbol *existing = find_symbol(name);
     if (existing != NULL) {
         /* Update existing symbol */
@@ -1743,18 +1945,18 @@ void add_symbol(char *name, int is_temp, int is_constant, int value) {
 
 void print_symbol_table() {
     Symbol *current = symbol_table;
-    printf("%-10s %-10s %-10s %-10s\n", "Name", "Type", "Constant", "Value");
-    printf("------------------------------------\n");
+    printf("%s%-10s %-10s %-10s %-10s%s\n", ANSI_BOLD, "Name", "Type", "Constant", "Value", ANSI_COLOR_RESET);
+    printf("%s------------------------------------%s\n", ANSI_COLOR_MAGENTA, ANSI_COLOR_RESET);
     while (current != NULL) {
-        printf("%-10s %-10s %-10s ", 
-            current->name, 
-            current->is_temp ? "temp" : "user",
-            current->is_constant ? "yes" : "no");
+        printf("%s%-10s%s %s%-10s%s %s%-10s%s ", 
+            ANSI_COLOR_GREEN, current->name, ANSI_COLOR_RESET,
+            ANSI_COLOR_CYAN, current->is_temp ? "temp" : "user", ANSI_COLOR_RESET,
+            ANSI_COLOR_YELLOW, current->is_constant ? "yes" : "no", ANSI_COLOR_RESET);
         
         if (current->is_constant) {
-            printf("%-10d\n", current->value);
+            printf("%s%-10g%s\n", ANSI_COLOR_RED, current->value, ANSI_COLOR_RESET);
         } else {
-            printf("%-10s\n", "unknown");
+            printf("%s%-10s%s\n", ANSI_COLOR_RED, "unknown", ANSI_COLOR_RESET);
         }
         
         current = current->next;
@@ -1773,7 +1975,7 @@ void free_symbol_table() {
 }
 
 void yyerror(const char *s) {
-    fprintf(stderr, "Error: %s\n", s);
+    fprintf(stderr, "%sError: %s%s\n", ANSI_COLOR_RED, s, ANSI_COLOR_RESET);
     free_symbol_table();
 }
 
